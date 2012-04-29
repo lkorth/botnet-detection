@@ -1,10 +1,19 @@
 package botnets;
 
+import java.net.InetAddress;
+
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
 import jpcap.packet.UDPPacket;
 
 class PacketHandler implements PacketReceiver {
+	
+	private String localNetwork;
+	
+	PacketHandler(String localNetwork){
+		this.localNetwork = localNetwork;
+	}
+	
 	//this method is called every time Jpcap captures a packet
 	public void receivePacket(Packet packet) {		
 		if(packet.header[23] == 17) { //udp packets (IP Packet protocol 17)
@@ -25,5 +34,9 @@ class PacketHandler implements PacketReceiver {
 	        else sb.append((char) data[i]);
 	    }
 	    return sb.toString();
+	}
+	
+	private boolean isLocalNetwork(InetAddress ip) {
+		return ip.getHostAddress().startsWith(localNetwork);
 	}
 }
