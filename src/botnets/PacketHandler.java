@@ -18,7 +18,8 @@ class PacketHandler implements PacketReceiver {
 	}
 	
 	//this method is called every time Jpcap captures a packet
-	public void receivePacket(Packet packet) {		
+	public void receivePacket(Packet packet) {	
+		//compare non local network with blacklist and note matches
 		if(packet.header[23] == 17) { //udp packets (IP Packet protocol 17)
 			UDPPacket p = (UDPPacket) packet;
 			if(p.dst_port == 53) { //dns outbound queries only
@@ -31,7 +32,7 @@ class PacketHandler implements PacketReceiver {
 		}
 	}
 	
-	//Conversation from byte[] to string
+	//Conversation from byte[] to string. Adapted from http://www.highonphp.com/decoding-udp-dns-requests and http://stackoverflow.com/questions/2201930/convert-ascii-byte-to-string
 	private String convert(byte[] data) {
 	    StringBuilder sb = new StringBuilder(data.length);
 	    for (int i = 13; i < data.length-5; ++ i) {
