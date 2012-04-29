@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<project name="Jpcap" default="jar">
+	<property name="version" value="0.4"/>
+	
+    <target name="jar" depends="compile">
+        <jar
+             jarfile="JpcapDumper.jar"
+             basedir="bin"
+        	manifest="JpcapDumper.MF"
+        />
+		<signjar
+			jar="JpcapDumper.jar"
+			alias="kfujii"
+			keystore="kfujii.dat"
+			storepass="kfujii"
+		/>
+    </target>
+
+    <target name="compile">
+        <javac
+        	srcdir="src"
+      		destdir="bin"
+       />
+    </target>
+	
+	<target name="source zip">
+		<zip
+			destfile="JpcapDumper-src.zip"
+			basedir="."
+			excludes="**/.* **/*.zip bin/** **/*.jar"
+		/>
+	</target>
+</project>
+
