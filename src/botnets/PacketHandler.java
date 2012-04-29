@@ -1,14 +1,17 @@
 package botnets;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
+import jpcap.packet.TCPPacket;
 import jpcap.packet.UDPPacket;
 
 class PacketHandler implements PacketReceiver {
 	
 	private String localNetwork;
+	private ArrayList<Host> hosts;
 	
 	PacketHandler(String localNetwork){
 		this.localNetwork = localNetwork;
@@ -21,6 +24,10 @@ class PacketHandler implements PacketReceiver {
 			if(p.dst_port == 53) { //dns outbound queries only
 				System.out.println(convert(p.data)); //print data of dns query
 			}
+		}
+		else if(packet.header[23] == 6) { //tcp packets (IP Packet protocol 6
+			TCPPacket p = (TCPPacket) packet;
+			storeWorkWeight(p);
 		}
 	}
 	
@@ -37,5 +44,31 @@ class PacketHandler implements PacketReceiver {
 	
 	private boolean isLocalNetwork(InetAddress ip) {
 		return ip.getHostAddress().startsWith(localNetwork);
+	}
+	
+	private void storeWorkWeight(TCPPacket packet) { //Described in paper here: http://web.cecs.pdx.edu/~jrb/jrb.papers/sruti06/sruti06.pdf
+		if(isLocalNetwork(packet.src_ip)) {
+			Host current = new Host(packet.src_ip.getHostAddress());
+			int index = hosts.indexOf(current);
+			if(index != -1) {
+				if(packet.ack)
+					hosts.get(index).addAck();
+				if(packet.fin)
+					hosts.get(index).addFin();
+				if(packet.rst)
+					hosts.get(index).addRst();
+				if(packet.syn)
+					hosts.get(index).addSyn();
+				hosts.get(index).addToTotal();
+			}
+			else {
+				current.setAck((packet.ack) ? 1 : 0);
+				current.setFin((packet.fin) ? 1 : 0);
+				current.setRst((packet.rst) ? 1 : 0);
+				current.setSyn((packet.syn) ? 1 : 0);
+				current.setTotalPackets(1);
+				hosts.add(current);
+			}
+		}
 	}
 }
