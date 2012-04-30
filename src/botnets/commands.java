@@ -15,9 +15,14 @@ public class commands implements Runnable {
 	@Override
 	public void run() {
 		while(true) {
-			if(scr.nextLine().trim().equals("printww")) {
+			String entered = scr.nextLine().trim();
+			if(entered.equals("printww")) {
 				System.out.println("Current Weights:");
 				ph.printWorkWeights();
+			}
+			else if(entered.equals("printpc")) {
+				System.out.println("Current Packet Counts:");
+				ph.printPacketCounts();
 			}
 		}
 	}
