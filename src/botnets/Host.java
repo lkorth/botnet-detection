@@ -1,24 +1,32 @@
 package botnets;
 
+import java.text.DecimalFormat;
+
 public class Host {
 
 	private String ip;
-	private long ack;
+	private long synack;
 	private long fin;
 	private long rst;
 	private long syn;
-	private long totalPackets;
+	private long totalSent;
+	private long totalReceived;
 
 	Host(String ip){
 		this.ip = ip;
 	}
 
 	public double calculateWorkWeight() {
-		return ((this.ack + this.fin + this.rst + this.syn) / this.totalPackets);
+		DecimalFormat format = new DecimalFormat("#.###");
+        return Double.valueOf(format.format((this.synack + this.fin + this.rst + this.syn) / (double) (this.totalSent + this.totalReceived)));
 	}
 	
-	public void addAck() {
-		this.ack++;
+	public String printPacketCounts() {
+		return (new String("Syn: " + this.syn + " SynAck: " + this.synack + " Fin: " + this.fin + " Rst: " + this.rst + " Total Sent: " + this.totalSent + " Total Received: " + this.totalReceived));
+	}
+	
+	public void addSynAck() {
+		this.synack++;
 	}
 
 	public void addFin() {
@@ -33,8 +41,12 @@ public class Host {
 		this.syn++;
 	}
 	
-	public void addToTotal() {
-		this.totalPackets++;
+	public void addToTotalSent() {
+		this.totalSent++;
+	}
+	
+	public void addToTotalReceived() {
+		this.totalReceived++;
 	}
 	
 	public boolean equals(Object obj) {
@@ -54,12 +66,12 @@ public class Host {
 		this.ip = ip;
 	}
 	
-	public long getAck() {
-		return ack;
+	public long getSynAck() {
+		return synack;
 	}
 
-	public void setAck(long ack) {
-		this.ack = ack;
+	public void setSynAck(long synack) {
+		this.synack = synack;
 	}
 
 	public long getFin() {
@@ -86,11 +98,19 @@ public class Host {
 		this.syn = syn;
 	}
 	
-	public long getTotalPackets() {
-		return totalPackets;
+	public long getTotalSent() {
+		return totalSent;
 	}
 
-	public void setTotalPackets(long totalPackets) {
-		this.totalPackets = totalPackets;
+	public void setTotalSent(long totalSent) {
+		this.totalSent = totalSent;
+	}
+	
+	public long getTotalReceived() {
+		return totalReceived;
+	}
+	
+	public void setTotalReceived(long totalReceived) {
+		this.totalReceived = totalReceived;
 	}
 }

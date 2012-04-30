@@ -2,6 +2,7 @@ package botnets;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import jpcap.PacketReceiver;
 import jpcap.packet.Packet;
@@ -15,6 +16,7 @@ class PacketHandler implements PacketReceiver {
 	
 	PacketHandler(String localNetwork){
 		this.localNetwork = localNetwork;
+		this.hosts = new ArrayList<Host>();
 	}
 	
 	//this method is called every time Jpcap captures a packet
@@ -23,11 +25,12 @@ class PacketHandler implements PacketReceiver {
 		if(packet.header[23] == 17) { //udp packets (IP Packet protocol 17)
 			UDPPacket p = (UDPPacket) packet;
 			if(p.dst_port == 53) { //dns outbound queries only
-				System.out.println(convert(p.data)); //print data of dns query
+				//System.out.println(convert(p.data)); //print data of dns query
 			}
 		}
 		else if(packet.header[23] == 6) { //tcp packets (IP Packet protocol 6
 			TCPPacket p = (TCPPacket) packet;
+			//System.out.println(p);
 			storeWorkWeight(p);
 		}
 	}
@@ -52,24 +55,57 @@ class PacketHandler implements PacketReceiver {
 			Host current = new Host(packet.src_ip.getHostAddress());
 			int index = hosts.indexOf(current);
 			if(index != -1) {
-				if(packet.ack)
-					hosts.get(index).addAck();
+				if(packet.ack && packet.syn)
+					hosts.get(index).addSynAck();
+				else if(packet.syn)
+					hosts.get(index).addSyn();
 				if(packet.fin)
 					hosts.get(index).addFin();
-				if(packet.rst)
-					hosts.get(index).addRst();
-				if(packet.syn)
-					hosts.get(index).addSyn();
-				hosts.get(index).addToTotal();
+				hosts.get(index).addToTotalSent();
 			}
 			else {
-				current.setAck((packet.ack) ? 1 : 0);
+				current.setSynAck((packet.ack && packet.syn) ? 1 : 0);
 				current.setFin((packet.fin) ? 1 : 0);
-				current.setRst((packet.rst) ? 1 : 0);
-				current.setSyn((packet.syn) ? 1 : 0);
-				current.setTotalPackets(1);
+				current.setRst(0);
+				current.setSyn((packet.syn && !packet.ack) ? 1 : 0);
+				current.setTotalSent(1);
 				hosts.add(current);
 			}
+		}
+		else {
+			Host current = new Host(packet.dst_ip.getHostAddress());
+			int index = hosts.indexOf(current);
+			if(index != -1) {
+				if(packet.rst)
+					hosts.get(index).addRst();
+				if(packet.fin)
+					hosts.get(index).addFin();
+				hosts.get(index).addToTotalReceived();
+			}
+			else {
+				current.setSynAck(0);
+				current.setFin((packet.fin) ? 1 : 0);
+				current.setRst((packet.rst) ? 1 : 0);
+				current.setSyn(0);
+				current.setTotalReceived(1);
+				hosts.add(current);
+			}
+		}
+	}
+
+	public void printWorkWeights() {
+		Iterator<Host> itr = hosts.iterator();
+		while(itr.hasNext()) {
+			Host h = itr.next();
+			System.out.println(h.getIp() + ": " + h.calculateWorkWeight());
+		}
+	}
+	
+	public void printPacketCounts() {
+		Iterator<Host> itr = hosts.iterator();
+		while(itr.hasNext()) {
+			Host h = itr.next();
+			System.out.println(h.getIp() + ": " + h.printPacketCounts());
 		}
 	}
 }
