@@ -8,18 +8,18 @@ import jpcap.NetworkInterface;
 
 public class Detection {
 	
-	final static int adaptor = 1;
+	final static int adapter = 0;  //may need to be adjusted depending on your adaptors on your computer
 	private static PacketHandler ph;
 	
 	public static void main(String[] args) throws Exception {		
 		NetworkInterface[] devices = JpcapCaptor.getDeviceList();
 		
-		classifyNetwork(devices[adaptor].addresses[1].address); // 1 = ip address of adaptor
+		classifyNetwork(devices[adapter].addresses[1].address); // 1 = ip address of adaptor
 		
 		Scanner scr = new Scanner(System.in);
 		(new Thread(new commands(scr, ph))).start();
 		
-		JpcapCaptor jpcap = JpcapCaptor.openDevice(devices[adaptor], 2000, true, 20);
+		JpcapCaptor jpcap = JpcapCaptor.openDevice(devices[adapter], 2000, true, 20);
 		jpcap.setFilter("ip", true); //only capture IP packets
 		jpcap.loopPacket(-1, ph); //capture packets infinitely
 	}
