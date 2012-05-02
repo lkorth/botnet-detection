@@ -240,6 +240,10 @@ class PacketHandler implements PacketReceiver {
 		}
 	}
 	
+	private void calculateEntropy(TCPPacket p) {
+		//TODO Calculate entropy of the packet data
+	}
+	
 	//Conversation from byte[] to dns query. Adapted from http://www.highonphp.com/decoding-udp-dns-requests and http://stackoverflow.com/questions/2201930/convert-ascii-byte-to-string
 	private String convert(byte[] data) {
 	    StringBuilder sb = new StringBuilder(data.length);
