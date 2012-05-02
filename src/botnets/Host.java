@@ -1,6 +1,7 @@
 package botnets;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class Host {
 
@@ -11,14 +12,25 @@ public class Host {
 	private long syn;
 	private long totalSent;
 	private long totalReceived;
-
+	private double maxWorkWeight = 0;
+	private int count = 0;
+	public ArrayList<String> httpRequests;
+	
 	Host(String ip){
 		this.ip = ip;
+		this.httpRequests = new ArrayList<String>();
 	}
 
-	public double calculateWorkWeight() {
-		DecimalFormat format = new DecimalFormat("#.###");
+	public double printWorkWeight() {
+		DecimalFormat format = new DecimalFormat("#.####");
         return Double.valueOf(format.format((this.synack + this.fin + this.rst + this.syn) / (double) (this.totalSent + this.totalReceived)));
+	}
+	
+	public void checkWorkWeight() {
+		DecimalFormat format = new DecimalFormat("#.####");
+        double tmp = Double.valueOf(format.format((this.synack + this.fin + this.rst + this.syn) / (double) (this.totalSent + this.totalReceived)));
+        if(tmp > this.maxWorkWeight)
+        	this.maxWorkWeight = tmp;
 	}
 	
 	public String printPacketCounts() {
@@ -43,10 +55,18 @@ public class Host {
 	
 	public void addToTotalSent() {
 		this.totalSent++;
+		if(this.count > 50)
+			checkWorkWeight();
+		else
+			this.count++;
 	}
 	
 	public void addToTotalReceived() {
 		this.totalReceived++;
+		if(this.count > 50)
+			checkWorkWeight();
+		else
+			this.count++;
 	}
 	
 	public boolean equals(Object obj) {
@@ -60,10 +80,6 @@ public class Host {
 	
 	public String getIp() {
 		return ip;
-	}
-
-	public void setIp(String ip) {
-		this.ip = ip;
 	}
 	
 	public long getSynAck() {

@@ -12,7 +12,7 @@ import jpcap.packet.UDPPacket;
 class PacketHandler implements PacketReceiver {
 	
 	private String localNetwork;
-	private ArrayList<Host> hosts;
+	public ArrayList<Host> hosts;
 	private ArrayList<Channel> channels;
 	
 	PacketHandler(String localNetwork){
@@ -33,20 +33,20 @@ class PacketHandler implements PacketReceiver {
 			TCPPacket p = (TCPPacket) packet;
 			storeWorkWeight(p);
 			checkForIRC(p);
+			String data = new String(p.data);
+			if(data.toLowerCase().startsWith("get") || data.toLowerCase().startsWith("post")) {
+				storeHttpRequest(p);
+			}
+				
 		}
 	}
 	
-	//Conversation from byte[] to string. Adapted from http://www.highonphp.com/decoding-udp-dns-requests and http://stackoverflow.com/questions/2201930/convert-ascii-byte-to-string
-	private String convert(byte[] data) {
-	    StringBuilder sb = new StringBuilder(data.length);
-	    for (int i = 13; i < data.length-5; ++ i) {
-	        if (data[i] < 0) throw new IllegalArgumentException();
-	        else if (data[i] < 32) sb.append('.');
-	        else if (data[i] > 32 && data[i] < 127) sb.append((char) data[i]);
-	    }
-	    return sb.toString();
+	private void storeHttpRequest(TCPPacket packet) {
+		Host current = new Host(packet.src_ip.getHostAddress());
+		int index = hosts.indexOf(current); //host will already exist because of storeWorkWeight call
+		hosts.get(index).httpRequests.add(new String(packet.data) + "Time: " + System.currentTimeMillis());
 	}
-	
+
 	private boolean isLocalNetwork(InetAddress ip) {
 		return ip.getHostAddress().startsWith(localNetwork);
 	}
@@ -130,15 +130,16 @@ class PacketHandler implements PacketReceiver {
 	}
 
 	public void printWorkWeights() {
-		Iterator<Host> itr = hosts.iterator();
+		ArrayList<Host> tmp = hosts;
+		Iterator<Host> itr = tmp.iterator();
 		while(itr.hasNext()) {
 			Host h = itr.next();
-			System.out.println(h.getIp() + ": " + h.calculateWorkWeight());
+			System.out.println(h.getIp() + ": " + h.printWorkWeight());
 		}
 	}
 	
 	public void printPacketCounts() {
-		Iterator<Host> itr = hosts.iterator();
+		Iterator<Host> itr = ((ArrayList<Host>) hosts.clone()).iterator();
 		while(itr.hasNext()) {
 			Host h = itr.next();
 			System.out.println(h.getIp() + ": " + h.printPacketCounts());
