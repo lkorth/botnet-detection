@@ -24,6 +24,22 @@ public class commands implements Runnable {
 				System.out.println("Current Packet Counts:");
 				ph.printPacketCounts();
 			}
+			else if(entered.equals("printwl")) {
+				System.out.println("Current Whitelist:");
+				ph.printWhitelist();
+			}
+			else if(entered.equals("printqueries")) {
+				System.out.println("Current DNS queries:");
+				ph.printDNSQueries();
+			}
+			else if(entered.equals("printbotqueries")) {
+				System.out.println("Current suspected bot dns queries:");
+				ph.printBotQueries();
+			}
+			else if(entered.equals("printIRC")) {
+				System.out.println("Current IRC Channels and hosts:");
+				ph.printIRC();
+			}
 		}
 	}
 
