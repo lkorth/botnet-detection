@@ -13,6 +13,7 @@ class PacketHandler implements PacketReceiver {
 	
 	private String localNetwork;
 	private ArrayList<Host> hosts;
+	private ArrayList<Channel> channels;
 	
 	PacketHandler(String localNetwork){
 		this.localNetwork = localNetwork;
@@ -28,10 +29,10 @@ class PacketHandler implements PacketReceiver {
 				//System.out.println(convert(p.data)); //print data of dns query
 			}
 		}
-		else if(packet.header[23] == 6) { //tcp packets (IP Packet protocol 6
+		else if(packet.header[23] == 6) { //tcp packets (IP Packet protocol 6)
 			TCPPacket p = (TCPPacket) packet;
-			//System.out.println(p);
 			storeWorkWeight(p);
+			checkForIRC(p);
 		}
 	}
 	
@@ -92,6 +93,41 @@ class PacketHandler implements PacketReceiver {
 			}
 		}
 	}
+	
+	private void checkForIRC(TCPPacket p) {
+		String data = new String(p.data).toLowerCase();
+		if(data.startsWith("join")) {
+			Channel current = new Channel(data.substring(5), p.dst_ip.getHostAddress() + p.dst_port);
+			int index = channels.indexOf(current);
+			if(index != -1) {
+				channels.get(index).addJoin();
+			}
+			else {
+				channels.add(current);
+			}
+		}
+		else if(data.startsWith("ping")) {
+			Channel current = new Channel(null, p.dst_ip.getHostAddress() + p.dst_port);
+			int index = channels.indexOf(current);
+			if(index != -1) {
+				channels.get(index).addPing();
+			}
+		}
+		else if(data.startsWith("pong")) {
+			Channel current = new Channel(null, p.dst_ip.getHostAddress() + p.dst_port);
+			int index = channels.indexOf(current);
+			if(index != -1) {
+				channels.get(index).addPong();
+			}
+		}
+		else if(data.startsWith("privmsg")) {
+			Channel current = new Channel(null, p.dst_ip.getHostAddress() + p.dst_port);
+			int index = channels.indexOf(current);
+			if(index != -1) {
+				channels.get(index).addPrivmsg();
+			}
+		}
+	}
 
 	public void printWorkWeights() {
 		Iterator<Host> itr = hosts.iterator();
@@ -106,6 +142,14 @@ class PacketHandler implements PacketReceiver {
 		while(itr.hasNext()) {
 			Host h = itr.next();
 			System.out.println(h.getIp() + ": " + h.printPacketCounts());
+		}
+	}
+
+	public void printIRC() {
+		Iterator<Channel> itr = ((ArrayList<Channel>) channels.clone()).iterator();
+		while(itr.hasNext()) {
+			Channel c = itr.next();
+			System.out.println(c.getChannel());
 		}
 	}
 }
